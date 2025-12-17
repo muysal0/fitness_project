@@ -27,7 +27,7 @@ init_db()
 
 @app.route('/')
 def home():
-    return "Fitness Backend Calisiyor! /api/classes adresine git."
+    return render_template('index.html')
 
 @app.route('/api/members', methods=['POST'])
 def create_member():

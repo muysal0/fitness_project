@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fitness Rezervasyon Sistemi</title>
+    <!-- Bootstrap CSS (Hızlı ve şık tasarım için) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .card { border: none; shadow: 0 4px 8px rgba(0,0,0,0.1); transition: 0.3s; }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 8px 16px rgba(0,0,0,0.2); }
+        .occupancy-bar { height: 10px; border-radius: 5px; }
+        .price-tag { font-size: 1.2rem; font-weight: bold; color: #28a745; }
+        .full-warning { color: #dc3545; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-dark bg-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="#">🏋️‍♂️ ProFitness Center</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Kullanıcı Paneli (Login Simülasyonu) -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card p-4 bg-white">
+                    <h5>👤 Üye Girişi (Simülasyon)</h5>
+                    <div class="row g-3 align-items-center">
+                        <div class="col-auto">
+                            <label class="col-form-label">Üye ID:</label>
+                        </div>
+                        <div class="col-auto">
+                            <input type="number" id="currentMemberId" class="form-control" value="1">
+                        </div>
+                        <div class="col-auto">
+                            <span class="form-text">
+                                Rezervasyon bu ID adına yapılacaktır.
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ders Listesi Başlığı -->
+        <h3 class="mb-3">📅 Güncel Ders Programı</h3>
+        
+        <!-- Derslerin Listeleneceği Alan -->
+        <div class="row" id="classes-container">
+            <!-- JavaScript burayı otomatik dolduracak -->
+            <div class="text-center mt-5">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p>Dersler yükleniyor...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap & Custom JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Sayfa yüklendiğinde dersleri çek
+        document.addEventListener("DOMContentLoaded", function() {
+            fetchClasses();
+        });
+
+        async function fetchClasses() {
+            try {
+                const response = await fetch('/api/classes');
+                const data = await response.json();
+                renderClasses(data.classes);
+            } catch (error) {
+                console.error('Hata:', error);
+                document.getElementById('classes-container').innerHTML = '<p class="text-danger">Dersler yüklenirken hata oluştu.</p>';
+            }
+        }
+
+        function renderClasses(classes) {
+            const container = document.getElementById('classes-container');
+            container.innerHTML = '';
+
+            classes.forEach(c => {
+                // Doluluk oranı hesapla
+                const occupancyRate = (c.occupancy / c.capacity) * 100;
+                let barColor = 'bg-success';
+                let btnState = '';
+                let btnText = 'Rezervasyon Yap';
+
+                // Renk ve buton durumu ayarları
+                if (occupancyRate >= 80) barColor = 'bg-warning'; // Yoğun
+                if (occupancyRate >= 100) {
+                    barColor = 'bg-danger'; // Dolu
+                    btnState = 'disabled';
+                    btnText = 'Kontenjan Dolu';
+                }
+
+                const cardHtml = `
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">${c.title}</h5>
+                                <h6 class="card-subtitle mb-2 text-muted">Eğitmen: ${c.instructor}</h6>
+                                <p class="card-text">
+                                    Taban Fiyat: <span class="price-tag">${c.base_price} TL</span>
+                                </p>
+                                
+                                <div class="mb-3">
+                                    <small>Doluluk: ${c.occupancy} / ${c.capacity}</small>
+                                    <div class="progress occupancy-bar">
+                                        <div class="progress-bar ${barColor}" role="progressbar" style="width: ${occupancyRate}%"></div>
+                                    </div>
+                                    ${occupancyRate > 80 && occupancyRate < 100 ? '<small class="text-warning fw-bold">⚠️ Yoğun Talep! Fiyat artabilir.</small>' : ''}
+                                </div>
+
+                                <button onclick="bookClass(${c.id})" class="btn btn-primary w-100" ${btnState}>
+                                    ${btnText}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += cardHtml;
+            });
+        }
+
+        async function bookClass(classId) {
+            const memberId = document.getElementById('currentMemberId').value;
+            
+            if (!memberId) {
+                alert("Lütfen geçerli bir Üye ID girin.");
+                return;
+            }
+
+            const payload = {
+                member_id: parseInt(memberId),
+                class_id: classId
+            };
+
+            try {
+                const response = await fetch('/api/reservations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert("✅ " + result.message);
+                    fetchClasses(); // Listeyi yenile (doluluk artsın)
+                } else {
+                    alert("❌ Hata: " + result.error);
+                }
+            } catch (error) {
+                alert("Bir bağlantı hatası oluştu.");
+            }
+        }
+    </script>
+</body>
+</html>
