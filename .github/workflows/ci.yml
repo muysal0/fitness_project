@@ -1,0 +1,42 @@
+name: Fitness App CI Pipeline
+
+# Ne zaman çalışsın?
+# 'main' dalına her push atıldığında veya pull request açıldığında.
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    # Bu iş Ubuntu sunucusunda çalışsın
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Adım: Kodları GitHub deposundan çek
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # 2. Adım: Python kur (Bizim bilgisayarımızdaki gibi)
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.9"
+
+    # 3. Adım: Kütüphaneleri yükle
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    # 4. Adım: Testleri çalıştır (TDD burada devreye giriyor!)
+    - name: Run Tests with Pytest
+      run: |
+        # PYTHONPATH ekliyoruz ki src klasörünü görsün
+        export PYTHONPATH=$PYTHONPATH:.
+        pytest
+
+    # 5. Adım (Bonus): Docker build testi yap (Dockerfile bozuk mu diye kontrol et)
+    - name: Build Docker Image
+      run: docker build . --file Dockerfile --tag fitness-app:latest
