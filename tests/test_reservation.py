@@ -34,3 +34,16 @@ def test_prevent_booking_when_full():
     # Dolu sınıfa kayıt yapmaya çalışınca ValueError hatası bekliyoruz
     with pytest.raises(ValueError, match="Class is full"):
         manager.book_class(member_late, private_lesson)
+
+def test_prevent_duplicate_booking():
+    # Arrange
+    zumba = FitnessClass("Zumba", "Asli Hoca", 10, "2025-06-22", 80.0)
+    member = Member(55, "Tekrar Eden Uye", "standard")
+    manager = ReservationManager()
+
+    # İlk rezervasyon başarılı olmalı
+    manager.book_class(member, zumba)
+
+    # Act & Assert
+    with pytest.raises(ValueError, match="Member already booked"):
+        manager.book_class(member, zumba)
