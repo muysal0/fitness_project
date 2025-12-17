@@ -3,141 +3,342 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fitness Rezervasyon Sistemi</title>
-    <!-- Bootstrap CSS (Hızlı ve şık tasarım için) -->
+    <title>ProFitness | Üye Girişi</title>
+    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        body { background-color: #f8f9fa; }
-        .card { border: none; shadow: 0 4px 8px rgba(0,0,0,0.1); transition: 0.3s; }
-        .card:hover { transform: translateY(-5px); box-shadow: 0 8px 16px rgba(0,0,0,0.2); }
-        .occupancy-bar { height: 10px; border-radius: 5px; }
-        .price-tag { font-size: 1.2rem; font-weight: bold; color: #28a745; }
-        .full-warning { color: #dc3545; font-weight: bold; }
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', sans-serif; min-height: 100vh; }
+        
+        /* GİRİŞ EKRANI STİLLERİ */
+        #login-screen {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        }
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+        }
+
+        /* DASHBOARD STİLLERİ */
+        #dashboard-screen { display: none; } /* Başlangıçta gizli */
+        
+        .class-card { border: none; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); transition: 0.3s; }
+        .class-card:hover { transform: translateY(-5px); }
+        .price-tag { font-size: 1.3rem; font-weight: bold; color: #28a745; }
+        .time-selector.active { background-color: #0d6efd; color: white; }
     </style>
 </head>
 <body>
 
-    <!-- Navbar -->
-    <nav class="navbar navbar-dark bg-dark mb-4">
-        <div class="container">
-            <a class="navbar-brand" href="#">🏋️‍♂️ ProFitness Center</a>
-        </div>
-    </nav>
+    <!-- ================= GİRİŞ EKRANI ================= -->
+    <div id="login-screen">
+        <div class="card login-card p-4 bg-white">
+            <div class="text-center mb-4">
+                <i class="fas fa-dumbbell fa-3x text-primary mb-3"></i>
+                <h3 class="fw-bold text-dark">ProFitness</h3>
+                <p class="text-muted">Hoş Geldiniz, lütfen giriş yapın.</p>
+            </div>
 
-    <div class="container">
-        <!-- Kullanıcı Paneli (Login Simülasyonu) -->
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <div class="card p-4 bg-white">
-                    <h5>👤 Üye Girişi (Simülasyon)</h5>
-                    <div class="row g-3 align-items-center">
-                        <div class="col-auto">
-                            <label class="col-form-label">Üye ID:</label>
+            <div class="mb-3">
+                <label class="form-label fw-bold small text-muted">ÜYE ID NUMARASI</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-id-card"></i></span>
+                    <input type="number" id="loginId" class="form-control" placeholder="Örn: 101">
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <div class="card bg-light border-0 p-3">
+                    <div class="form-check form-switch d-flex justify-content-between align-items-center">
+                        <label class="form-check-label fw-bold" for="loginStudentCheck">
+                            🎓 Ben Öğrenciyim
+                        </label>
+                        <input class="form-check-input" type="checkbox" id="loginStudentCheck" style="width: 50px; height: 25px;">
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="login()" class="btn btn-primary w-100 py-2 fw-bold rounded-pill">
+                GİRİŞ YAP <i class="fas fa-arrow-right ms-2"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- ================= ANA EKRAN (DASHBOARD) ================= -->
+    <div id="dashboard-screen">
+        <!-- Navbar -->
+        <nav class="navbar navbar-dark bg-dark mb-4 shadow">
+            <div class="container">
+                <span class="navbar-brand fw-bold"><i class="fas fa-dumbbell text-warning"></i> ProFitness</span>
+                <div class="d-flex align-items-center text-white">
+                    <div class="me-3 text-end">
+                        <div class="small text-muted">Aktif Üye</div>
+                        <div class="fw-bold" id="user-display-name">ID: ---</div>
+                    </div>
+                    <button onclick="logout()" class="btn btn-outline-danger btn-sm">
+                        <i class="fas fa-sign-out-alt"></i> Çıkış
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container">
+            
+            <!-- REZERVASYONLARIM -->
+            <div class="row mb-5">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white py-3">
+                            <h6 class="mb-0 fw-bold text-primary"><i class="fas fa-list-check"></i> Rezervasyonlarım</h6>
                         </div>
-                        <div class="col-auto">
-                            <input type="number" id="currentMemberId" class="form-control" value="1">
-                        </div>
-                        <div class="col-auto">
-                            <span class="form-text">
-                                Rezervasyon bu ID adına yapılacaktır.
-                            </span>
+                        <div class="card-body p-0">
+                            <ul class="list-group list-group-flush" id="my-reservations-list">
+                                <li class="list-group-item text-center py-3 text-muted">Yükleniyor...</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Ders Listesi Başlığı -->
-        <h3 class="mb-3">📅 Güncel Ders Programı</h3>
-        
-        <!-- Derslerin Listeleneceği Alan -->
-        <div class="row" id="classes-container">
-            <!-- JavaScript burayı otomatik dolduracak -->
-            <div class="text-center mt-5">
-                <div class="spinner-border text-primary" role="status"></div>
-                <p>Dersler yükleniyor...</p>
+            <!-- DERS LİSTESİ -->
+            <h4 class="mb-3 fw-bold text-dark"><i class="far fa-calendar-alt"></i> Müsait Dersler</h4>
+            <div class="row" id="classes-container">
+                <!-- JS ile dolacak -->
             </div>
+
         </div>
+        
+        <footer class="text-center py-4 text-muted mt-5 small">
+            &copy; 2025 ProFitness TDD Project
+        </footer>
     </div>
 
-    <!-- Bootstrap & Custom JS -->
+    <!-- SCRIPTS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
-        // Sayfa yüklendiğinde dersleri çek
-        document.addEventListener("DOMContentLoaded", function() {
+        // Global Kullanıcı Değişkeni
+        let currentUser = {
+            id: null,
+            isStudent: false
+        };
+
+        let allGroups = {};
+
+        // === GİRİŞ / ÇIKIŞ İŞLEMLERİ ===
+
+        function login() {
+            const idInput = document.getElementById('loginId').value;
+            const studentCheck = document.getElementById('loginStudentCheck').checked;
+
+            if (!idInput) {
+                Swal.fire('Hata', 'Lütfen Üye ID giriniz.', 'warning');
+                return;
+            }
+
+            // Kullanıcıyı ayarla
+            currentUser.id = parseInt(idInput);
+            currentUser.isStudent = studentCheck;
+
+            // UI Güncelle
+            document.getElementById('user-display-name').innerText = `ID: ${currentUser.id} ${currentUser.isStudent ? '(Öğrenci)' : ''}`;
+            
+            // Ekranları değiştir
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('dashboard-screen').style.display = 'block';
+
+            // Verileri Çek
             fetchClasses();
-        });
+            fetchMyReservations();
+        }
+
+        function logout() {
+            currentUser = { id: null, isStudent: false };
+            document.getElementById('loginId').value = '';
+            document.getElementById('loginStudentCheck').checked = false;
+            
+            document.getElementById('dashboard-screen').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'flex';
+        }
+
+        // === VERİ ÇEKME İŞLEMLERİ ===
 
         async function fetchClasses() {
             try {
-                const response = await fetch('/api/classes');
+                // Login olurken seçilen öğrenci durumunu kullanıyoruz
+                const response = await fetch(`/api/classes?student=${currentUser.isStudent}`);
                 const data = await response.json();
-                renderClasses(data.classes);
+                groupAndRender(data.classes);
             } catch (error) {
-                console.error('Hata:', error);
-                document.getElementById('classes-container').innerHTML = '<p class="text-danger">Dersler yüklenirken hata oluştu.</p>';
+                console.error("Hata:", error);
             }
         }
 
-        function renderClasses(classes) {
+        async function fetchMyReservations() {
+            if (!currentUser.id) return;
+            try {
+                const response = await fetch(`/api/members/${currentUser.id}/reservations`);
+                const data = await response.json();
+                renderMyReservations(data.reservations);
+            } catch (error) {
+                console.error("Hata:", error);
+            }
+        }
+
+        // === RENDER (EKRANA BASMA) İŞLEMLERİ ===
+
+        function renderMyReservations(reservations) {
+            const list = document.getElementById('my-reservations-list');
+            list.innerHTML = '';
+
+            if (reservations.length === 0) {
+                list.innerHTML = '<li class="list-group-item text-center text-muted py-3">Henüz aktif bir rezervasyonunuz yok.</li>';
+                return;
+            }
+
+            reservations.forEach(r => {
+                const item = `
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="fw-bold text-dark">${r.title}</span>
+                            <span class="badge bg-light text-dark mx-2"><i class="far fa-clock"></i> ${r.time}</span>
+                            <small class="text-muted">${r.instructor}</small>
+                        </div>
+                        <button onclick="cancelReservation(${r.class_id})" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+                            <i class="fas fa-times me-1"></i> İptal
+                        </button>
+                    </li>
+                `;
+                list.innerHTML += item;
+            });
+        }
+
+        function groupAndRender(classes) {
+            allGroups = {};
+            classes.forEach(c => {
+                if (!allGroups[c.title]) allGroups[c.title] = [];
+                allGroups[c.title].push(c);
+            });
+
             const container = document.getElementById('classes-container');
             container.innerHTML = '';
 
-            classes.forEach(c => {
-                // Doluluk oranı hesapla
-                const occupancyRate = (c.occupancy / c.capacity) * 100;
-                let barColor = 'bg-success';
-                let btnState = '';
-                let btnText = 'Rezervasyon Yap';
-
-                // Renk ve buton durumu ayarları
-                if (occupancyRate >= 80) barColor = 'bg-warning'; // Yoğun
-                if (occupancyRate >= 100) {
-                    barColor = 'bg-danger'; // Dolu
-                    btnState = 'disabled';
-                    btnText = 'Kontenjan Dolu';
-                }
+            for (const [title, sessions] of Object.entries(allGroups)) {
+                const firstSession = sessions[0];
+                
+                let timeButtonsHtml = '';
+                sessions.forEach((s, index) => {
+                    let btnClass = 'btn-outline-primary';
+                    if (s.occupancy >= s.capacity) btnClass = 'btn-outline-secondary disabled';
+                    const activeClass = index === 0 ? 'active' : '';
+                    
+                    timeButtonsHtml += `
+                        <button type="button" 
+                                class="btn ${btnClass} ${activeClass} btn-sm me-2 mb-2 time-selector" 
+                                onclick="selectTime('${title}', ${s.id}, this)">
+                            <i class="far fa-clock"></i> ${s.time}
+                        </button>
+                    `;
+                });
 
                 const cardHtml = `
-                    <div class="col-md-4 mb-4">
-                        <div class="card h-100">
+                    <div class="col-md-6 mb-4">
+                        <div class="card class-card h-100">
                             <div class="card-body">
-                                <h5 class="card-title">${c.title}</h5>
-                                <h6 class="card-subtitle mb-2 text-muted">Eğitmen: ${c.instructor}</h6>
-                                <p class="card-text">
-                                    Taban Fiyat: <span class="price-tag">${c.base_price} TL</span>
-                                </p>
-                                
-                                <div class="mb-3">
-                                    <small>Doluluk: ${c.occupancy} / ${c.capacity}</small>
-                                    <div class="progress occupancy-bar">
-                                        <div class="progress-bar ${barColor}" role="progressbar" style="width: ${occupancyRate}%"></div>
-                                    </div>
-                                    ${occupancyRate > 80 && occupancyRate < 100 ? '<small class="text-warning fw-bold">⚠️ Yoğun Talep! Fiyat artabilir.</small>' : ''}
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="card-title fw-bold mb-0">${title}</h5>
+                                    <span class="badge bg-dark">${firstSession.instructor}</span>
                                 </div>
-
-                                <button onclick="bookClass(${c.id})" class="btn btn-primary w-100" ${btnState}>
-                                    ${btnText}
-                                </button>
+                                <p class="text-muted small">Seans Seçiniz:</p>
+                                <div class="d-flex flex-wrap mb-3" id="buttons-${title.replace(/\s/g, '')}">
+                                    ${timeButtonsHtml}
+                                </div>
+                                <div id="info-area-${firstSession.id}" class="dynamic-info p-3 bg-light rounded">
+                                    ${generateInfoHtml(firstSession)}
+                                </div>
                             </div>
                         </div>
                     </div>
                 `;
                 container.innerHTML += cardHtml;
-            });
+            }
         }
 
-        async function bookClass(classId) {
-            const memberId = document.getElementById('currentMemberId').value;
-            
-            if (!memberId) {
-                alert("Lütfen geçerli bir Üye ID girin.");
-                return;
+        function selectTime(groupTitle, selectedId, btnElement) {
+            const groupKey = groupTitle.replace(/\s/g, '');
+            const container = document.getElementById(`buttons-${groupKey}`);
+            const buttons = container.getElementsByClassName('time-selector');
+            for (let btn of buttons) btn.classList.remove('active');
+            btnElement.classList.add('active');
+
+            const session = allGroups[groupTitle].find(s => s.id === selectedId);
+            const cardBody = btnElement.closest('.card-body');
+            const infoArea = cardBody.querySelector('.dynamic-info');
+            infoArea.innerHTML = generateInfoHtml(session);
+        }
+
+        function generateInfoHtml(c) {
+            const occupancyRate = (c.occupancy / c.capacity) * 100;
+            let barColor = 'bg-success';
+            let alertBadge = '';
+            let btnState = '';
+            let btnText = 'Rezervasyon Yap';
+
+            if (occupancyRate >= 80) {
+                barColor = 'bg-warning';
+                alertBadge = '<div class="mt-1"><span class="badge bg-danger">⚡ Yoğunluk Zammı (+%20)</span></div>';
+            }
+            if (occupancyRate >= 100) {
+                barColor = 'bg-danger';
+                btnState = 'disabled';
+                btnText = 'Kontenjan Dolu';
+                alertBadge = '<div class="mt-1"><span class="badge bg-dark">Tükendi</span></div>';
             }
 
+            let priceDisplay = `<div class="price-tag">${c.final_price} TL</div>`;
+            if (c.final_price !== c.base_price) {
+                priceDisplay = `
+                    <div class="text-muted text-decoration-line-through small">Taban: ${c.base_price} TL</div>
+                    <div class="price-tag">${c.final_price} TL</div>
+                `;
+            }
+
+            return `
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="fw-bold text-secondary small">Doluluk</span>
+                    <span class="small">${c.occupancy}/${c.capacity}</span>
+                </div>
+                <div class="progress mb-3" style="height: 6px;">
+                    <div class="progress-bar ${barColor}" style="width: ${occupancyRate}%"></div>
+                </div>
+                <div class="text-center mb-3">
+                    ${priceDisplay}
+                    ${alertBadge}
+                </div>
+                <button onclick="bookClass(${c.id})" class="btn btn-primary w-100 fw-bold" ${btnState}>
+                    ${btnText}
+                </button>
+            `;
+        }
+
+        // === REZERVASYON İŞLEMLERİ ===
+
+        async function bookClass(classId) {
+            // Giriş yapmış kullanıcının bilgilerini kullanıyoruz
             const payload = {
-                member_id: parseInt(memberId),
-                class_id: classId
+                member_id: currentUser.id,
+                class_id: classId,
+                membership_type: currentUser.isStudent ? 'student' : 'standard'
             };
 
             try {
@@ -146,17 +347,58 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-
+                
                 const result = await response.json();
 
                 if (response.ok) {
-                    alert("✅ " + result.message);
-                    fetchClasses(); // Listeyi yenile (doluluk artsın)
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Başarılı!',
+                        text: result.message,
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    // Listeleri Güncelle
+                    fetchClasses(); // Ders doluluğunu güncelle
+                    fetchMyReservations(); // Listeme ekle
                 } else {
-                    alert("❌ Hata: " + result.error);
+                    Swal.fire('Hata', result.error, 'error');
                 }
-            } catch (error) {
-                alert("Bir bağlantı hatası oluştu.");
+            } catch (err) {
+                Swal.fire('Hata', 'Sunucu hatası', 'error');
+            }
+        }
+
+        async function cancelReservation(classId) {
+            const confirmResult = await Swal.fire({
+                title: 'Emin misiniz?',
+                text: "Rezervasyon iptal edilecek.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'İptal Et'
+            });
+
+            if (!confirmResult.isConfirmed) return;
+
+            try {
+                const response = await fetch('/api/reservations', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ member_id: currentUser.id, class_id: classId })
+                });
+                
+                const result = await response.json();
+
+                if (response.ok) {
+                    Swal.fire('İptal Edildi', result.message, 'success');
+                    fetchClasses();
+                    fetchMyReservations();
+                } else {
+                    Swal.fire('Hata', result.error, 'error');
+                }
+            } catch (err) {
+                Swal.fire('Hata', 'İptal başarısız', 'error');
             }
         }
     </script>
