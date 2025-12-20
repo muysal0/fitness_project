@@ -47,3 +47,32 @@ def test_prevent_duplicate_booking():
     # Act & Assert
     with pytest.raises(ValueError, match="Member already booked"):
         manager.book_class(member, zumba)
+
+def test_cancel_reservation_success():
+    # Arrange
+    zumba = FitnessClass("Zumba", "Asli", 10, "2025-06-22", 80.0)
+    member = Member(1, "Ali", "standard")
+    manager = ReservationManager()
+    
+    # Önce rezervasyon yapalım
+    manager.book_class(member, zumba)
+    
+    # Act: İptal et
+    result = manager.cancel_reservation(member, zumba)
+    
+    # Assert
+    assert result["status"] == "cancelled"
+    assert member.member_id not in zumba.reservations
+
+def test_cancel_reservation_failure_not_found():
+    # Arrange
+    zumba = FitnessClass("Zumba", "Asli", 10, "2025-06-22", 80.0)
+    member = Member(1, "Ali", "standard")
+    manager = ReservationManager()
+    
+    # Rezervasyon YAPMADAN iptal etmeye çalışalım
+    
+    # Act & Assert
+    # Hata fırlatmasını bekliyoruz (Else bloğuna girecek)
+    with pytest.raises(ValueError, match="Member not found"):
+        manager.cancel_reservation(member, zumba)

@@ -1,0 +1,9 @@
+[run]
+branch = True
+source = src/
+omit = 
+    src/app.py
+    src/__init__.py
+    tests/*
+    htmlcov/*
+    .venv/*

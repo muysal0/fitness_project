@@ -3,3 +3,7 @@ __pycache__
 .git
 .github
 .pytest_cache
+.coverage
+htmlcov/
+.venv/
+.coveragerc
