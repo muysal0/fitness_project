@@ -1,7 +1,5 @@
-name: Fitness App CI Pipeline
+name: Fitness Project Full CI Pipeline
 
-# Ne zaman çalışsın?
-# 'main' dalına her push atıldığında veya pull request açıldığında.
 on:
   push:
     branches: [ "main" ]
@@ -9,34 +7,60 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build-and-test:
-    # Bu iş Ubuntu sunucusunda çalışsın
+  test-suite:
     runs-on: ubuntu-latest
 
+    services:
+      # Veritabanı Servisi (PostgreSQL)
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: fitness_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
-    # 1. Adım: Kodları GitHub deposundan çek
-    - name: Checkout code
+    # 1. Kodları Çek
+    - name: Checkout Code
       uses: actions/checkout@v3
 
-    # 2. Adım: Python kur (Bizim bilgisayarımızdaki gibi)
+    # 2. Python Kurulumu
     - name: Set up Python 3.9
       uses: actions/setup-python@v4
       with:
         python-version: "3.9"
 
-    # 3. Adım: Kütüphaneleri yükle
-    - name: Install dependencies
+    # 3. Kütüphaneleri Yükle
+    - name: Install Dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+        # Newman kurulumu (API testi için)
+        sudo npm install -g newman
 
-    # 4. Adım: Testleri çalıştır (TDD burada devreye giriyor!)
-    - name: Run Tests with Pytest
+    # 4. Unit Testleri Çalıştır
+    - name: Run Unit Tests (Pytest)
       run: |
-        # PYTHONPATH ekliyoruz ki src klasörünü görsün
-        export PYTHONPATH=$PYTHONPATH:.
+        export PYTHONPATH=$PWD
         pytest
 
-    # 5. Adım (Bonus): Docker build testi yap (Dockerfile bozuk mu diye kontrol et)
-    - name: Build Docker Image
-      run: docker build . --file Dockerfile --tag fitness-app:latest
+    # 5. Entegrasyon Testi (Postman/Newman)
+    - name: Run Integration Tests (Newman)
+      env:
+        DATABASE_URL: "postgresql://user:password@localhost:5432/fitness_db"
+      run: |
+        # A) Uygulamayı Arka Planda Başlat
+        python src/app.py &
+        
+        # B) Uygulamanın açılması için 5 sn bekle
+        sleep 5
+        
+        # C) Newman ile Postman dosyasını çalıştır
+        newman run tests/fitness_api.postman_collection.json
