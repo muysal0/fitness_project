@@ -3,7 +3,8 @@ __pycache__
 .git
 .github
 .pytest_cache
-.coverage
-htmlcov/
-.venv/
-.coveragerc
+venv
+instance
+.idea
+.vscode
+fitness.db

@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  # 1. Hizmet: Veritabanı (PostgreSQL)
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: fitness_user
+      POSTGRES_PASSWORD: fitness_password
+      POSTGRES_DB: fitness_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432" # İstersen bilgisayarından da DB'ye eriş diye
+
+  # 2. Hizmet: Senin Yazdığın Uygulama (Flask)
+  web:
+    build: .
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      # Flask'a diyoruz ki: "Veritabanın 'db' isimli bilgisayarda"
+      DATABASE_URL: postgresql://fitness_user:fitness_password@db:5432/fitness_db
+    depends_on:
+      - db # Önce veritabanı başlasın, sonra web
+
+volumes:
+  postgres_data:

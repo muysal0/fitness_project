@@ -1,0 +1,40 @@
+# --- Python Derleme Dosyaları ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# --- Sanal Ortamlar (Virtual Environments) ---
+venv/
+.venv/
+env/
+ENV/
+
+# --- Veritabanı (SQLite) ---
+# GitHub'a veritabanı yüklenmez, her kurulumda sıfırdan oluşur veya Postgres kullanılır
+*.db
+*.sqlite3
+instance/
+
+# --- Test ve Kapsama Raporları ---
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# --- Mutasyon Testi (Mutmut) ---
+.mutmut-cache
+# Mutmut bazen html raporu oluşturur
+mutmut_html/
+
+# --- Çevresel Değişkenler (Gizli Bilgiler) ---
+.env
+
+# --- IDE ve Editör Dosyaları ---
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# --- Log Dosyaları ---
+*.log
