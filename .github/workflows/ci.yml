@@ -11,7 +11,6 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      # Veritabanı Servisi (PostgreSQL)
       postgres:
         image: postgres:15-alpine
         env:
@@ -45,11 +44,12 @@ jobs:
         # Newman kurulumu (API testi için)
         sudo npm install -g newman
 
-     # 4. Unit Testleri Çalıştır (DÜZELTİLMİŞ)
+    # 4. Unit Testleri Çalıştır
     - name: Run Unit Tests (Pytest)
       env:
-        # Boş bırakma! Geçerli bir sanal adres veriyoruz.
-        DATABASE_URL: "sqlite:///:memory:"
+        # BURASI ÖNEMLİ: Docker service olarak açılan Postgres'e bağlanıyoruz.
+        # GitHub Actions'da servisler 'localhost' üzerinden erişilir.
+        DATABASE_URL: "postgresql://user:password@localhost:5432/fitness_db"
       run: |
         export PYTHONPATH=$PWD
         pytest -v
