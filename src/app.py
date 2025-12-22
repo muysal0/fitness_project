@@ -34,6 +34,19 @@ class FitnessClass(db.Model):
     capacity = db.Column(db.Integer, default=10)
     base_price = db.Column(db.Float, default=100.0)
 
+def calculate_final_price(base_price, is_student, occupancy_rate):
+    price = base_price
+    
+    # 1. Öğrenci İndirimi (%50)
+    if is_student:
+        price = price * 0.50
+
+    # 2. Surge Pricing (Doluluk > %80 ise %20 Zam)
+    if occupancy_rate > 0.80:
+        price = price * 1.20
+
+    return round(price, 2)
+
 # --- DB BAŞLATMA ---
 def init_db():
     retries = 5
