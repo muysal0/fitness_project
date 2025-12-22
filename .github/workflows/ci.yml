@@ -51,16 +51,41 @@ jobs:
         export PYTHONPATH=$PWD
         pytest
 
-    # 5. Entegrasyon Testi (Postman/Newman)
+    # ... önceki adımlar aynı ...
+
+    # 5. Entegrasyon Testi (Newman) 
     - name: Run Integration Tests (Newman)
       env:
+        # GitHub Actions'da servisler localhost üzerinden erişilir
         DATABASE_URL: "postgresql://user:password@localhost:5432/fitness_db"
       run: |
-        # A) Uygulamayı Arka Planda Başlat
-        python src/app.py &
+        # 1. Python yolunu ayarla (Import hatalarını önler)
+        export PYTHONPATH=$PWD
         
-        # B) Uygulamanın açılması için 5 sn bekle
-        sleep 5
+        # 2. Uygulamayı arka planda başlat ve logları kaydet
+        # -u: Python çıktılarını tamponlamadan anında yazsın
+        python -u -m src.app > app.log 2>&1 &
+        APP_PID=$!
         
-        # C) Newman ile Postman dosyasını çalıştır
+        # 3. Uygulamanın açılmasını bekle (Döngü ile kontrol et)
+        echo "Uygulama başlatılıyor..."
+        for i in {1..15}; do
+          if curl -s http://localhost:5000 > /dev/null; then
+            echo "✅ Uygulama başarıyla ayağa kalktı!"
+            break
+          fi
+          echo "Bekleniyor... ($i/15)"
+          sleep 2
+        done
+        
+        # 4. Eğer uygulama hala açılmadıysa logları bas ve hata ver
+        if ! curl -s http://localhost:5000 > /dev/null; then
+          echo "❌ HATA: Uygulama başlatılamadı via localhost:5000"
+          echo "=== APP LOGLARI BAŞLANGIÇ ==="
+          cat app.log
+          echo "=== APP LOGLARI BİTİŞ ==="
+          exit 1
+        fi
+        
+        # 5. Her şey yolundaysa testleri çalıştır
         newman run tests/fitness_api.postman_collection.json
