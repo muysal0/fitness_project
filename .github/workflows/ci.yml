@@ -45,18 +45,14 @@ jobs:
         # Newman kurulumu (API testi için)
         sudo npm install -g newman
 
-     # 4. Unit Testleri Çalıştır (GÜNCELLENMİŞ)
+     # 4. Unit Testleri Çalıştır (DÜZELTİLMİŞ)
     - name: Run Unit Tests (Pytest)
       env:
-        # Unit testlerde Postgres'e gitmesin, SQLite kullansın diye boşaltıyoruz
-        DATABASE_URL: ""
+        # Boş bırakma! Geçerli bir sanal adres veriyoruz.
+        DATABASE_URL: "sqlite:///:memory:"
       run: |
-        # Python yolunu ayarla
         export PYTHONPATH=$PWD
-        # Testleri çalıştır (-v detaylı gösterir)
         pytest -v
-
-    # ... önceki adımlar aynı ...
 
     # 5. Entegrasyon Testi (Newman) 
     - name: Run Integration Tests (Newman)
