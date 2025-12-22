@@ -2,11 +2,11 @@ import os
 import time
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import select
 
 app = Flask(__name__)
 
 # --- VERITABANI AYARI ---
-# Docker'dan gelen URL'yi al, yoksa SQLite kullan
 db_url = os.environ.get('DATABASE_URL', 'sqlite:///fitness.db')
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
@@ -17,7 +17,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 # --- MODELLER ---
-# Ara tablo (Çoka-Çok ilişki)
 reservations = db.Table('reservations',
     db.Column('member_id', db.Integer, db.ForeignKey('member.id'), primary_key=True),
     db.Column('fitness_class_id', db.Integer, db.ForeignKey('fitness_class.id'), primary_key=True)
@@ -35,14 +34,16 @@ class FitnessClass(db.Model):
     capacity = db.Column(db.Integer, default=10)
     base_price = db.Column(db.Float, default=100.0)
 
-# --- DB BAŞLATMA (RETRY MANTIKLI) ---
+# --- DB BAŞLATMA ---
 def init_db():
     retries = 5
     while retries > 0:
         try:
             with app.app_context():
                 db.create_all()
-                if FitnessClass.query.count() == 0:
+                # Yeni sayım yöntemi (Warning vermez)
+                count = db.session.scalar(select(FitnessClass))
+                if not count:
                     c1 = FitnessClass(title="Yoga", capacity=10, base_price=100.0)
                     db.session.add(c1)
                     db.session.commit()
@@ -60,7 +61,8 @@ def home():
 
 @app.route('/api/classes', methods=['GET'])
 def list_classes():
-    classes = FitnessClass.query.all()
+    # Yeni sorgu yöntemi (select)
+    classes = db.session.scalars(select(FitnessClass)).all()
     result = []
     for c in classes:
         result.append({
@@ -77,18 +79,18 @@ def make_reservation():
     m_id = data.get('member_id')
     c_id = data.get('class_id')
 
-    # Üye var mı? Yoksa oluştur.
-    member = Member.query.get(m_id)
+    # DÜZELTİLEN KISIM: .query.get() yerine db.session.get()
+    member = db.session.get(Member, m_id)
     if not member:
         member = Member(id=m_id)
         db.session.add(member)
     
-    # Ders var mı?
-    f_class = FitnessClass.query.get(c_id)
+    # DÜZELTİLEN KISIM: .query.get() yerine db.session.get()
+    f_class = db.session.get(FitnessClass, c_id)
+    
     if not f_class:
         return jsonify({"error": "Ders bulunamadi"}), 404
 
-    # Çifte kayıt kontrolü
     if f_class in member.classes:
         return jsonify({"error": "Zaten kayitlisin"}), 400
 
@@ -104,6 +106,5 @@ def reset():
     return jsonify({"message": "Resetlendi"})
 
 if __name__ == '__main__':
-    # DB'yi sadece main'de başlat
     init_db()
     app.run(host='0.0.0.0', port=5000)

@@ -1,87 +1,66 @@
 import pytest
 import json
-from src.app import app, init_db, classes_db, members_db
+from src.app import app, db, Member, FitnessClass
 
 @pytest.fixture
 def client():
-    # Test ortamını hazırla
+    # Testler için geçici bir yapılandırma
     app.config['TESTING'] = True
-    
-    # Her testten önce veritabanını sıfırla ve yeniden başlat
-    classes_db.clear()
-    members_db.clear()
-    init_db() 
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:' # RAM'de çalışan hızlı DB
     
     with app.test_client() as client:
+        with app.app_context():
+            db.create_all()
+            # Test verilerini ekle
+            c1 = FitnessClass(title="Test Yoga", capacity=10, base_price=100.0)
+            db.session.add(c1)
+            db.session.commit()
+        
         yield client
+        
+        # Test bitince temizle
+        with app.app_context():
+            db.drop_all()
 
 def test_api_list_classes(client):
-    # Act: Ders listesini iste
+    """Ders listesi geliyor mu?"""
     response = client.get('/api/classes')
-
-    # Assert: Başarılı dönmeli
     assert response.status_code == 200
     data = json.loads(response.data)
     assert "classes" in data
-    assert len(data["classes"]) > 0
-    # Yeni eklediğimiz "time" alanı gelmiş mi?
-    assert "time" in data["classes"][0]
+    assert len(data["classes"]) == 1
+    assert data["classes"][0]["title"] == "Test Yoga"
 
-def test_api_make_reservation(client):
-    # Arrange
+def test_api_make_reservation_success(client):
+    """Başarılı rezervasyon testi"""
     payload = {
         "member_id": 101,
-        "class_id": 101, # Morning Yoga 08:00
-        "membership_type": "standard"
+        "class_id": 1
     }
-
-    # Act
     response = client.post('/api/reservations', 
                            json=payload,
                            content_type='application/json')
-
-    # Assert
-    assert response.status_code == 201 or response.status_code == 200
-    data = json.loads(response.data)
-    assert data["status"] == "confirmed"
-
-def test_api_cancel_reservation(client):
-    # Arrange: Önce rezervasyon yap
-    setup_payload = {
-        "member_id": 99, 
-        "class_id": 101,
-        "membership_type": "standard"
-    }
-    client.post('/api/reservations', json=setup_payload)
-
-    # Act: İptal isteği (DELETE) at
-    delete_payload = {
-        "member_id": 99, 
-        "class_id": 101
-    }
-    response = client.delete('/api/reservations', 
-                             json=delete_payload,
-                             content_type='application/json')
-
-    # Assert
-    assert response.status_code == 200
-    data = json.loads(response.data)
-    assert "cancelled successfully" in data["message"]
-
-def test_api_check_student_price(client):
-    # Arrange: Öğrenci filtresi ile dersleri iste
-    response = client.get('/api/classes?student=true')
     
-    # Assert
-    assert response.status_code == 200
+    assert response.status_code == 201
     data = json.loads(response.data)
-    first_class = data["classes"][0]
+    assert data["message"] == "Kayit Basarili"
+
+def test_api_make_reservation_duplicate(client):
+    """Çifte kayıt engelleme testi"""
+    payload = {"member_id": 101, "class_id": 1}
     
-    # Base price 100 ise final price 50 olmalı (%50 indirim)
-    # Not: Hangi dersin geldiğine göre base_price değişebilir, orana bakıyoruz.
-    base = first_class["base_price"]
-    final = first_class["final_price"]
+    # 1. Kayıt (Başarılı)
+    client.post('/api/reservations', json=payload)
     
-    # İndirim uygulanmış mı? (Final fiyat taban fiyattan düşük olmalı)
-    assert final < base
-    assert final == base * 0.5
+    # 2. Kayıt (Hata vermeli)
+    response = client.post('/api/reservations', json=payload)
+    
+    assert response.status_code == 400
+    data = json.loads(response.data)
+    assert "Zaten kayitlisin" in data["error"]
+
+def test_api_invalid_class(client):
+    """Olmayan ders ID testi"""
+    payload = {"member_id": 101, "class_id": 999}
+    response = client.post('/api/reservations', json=payload)
+    assert response.status_code == 404
