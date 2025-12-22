@@ -1,0 +1,2 @@
+# Shell scriptleri her zaman Linux formatında (LF) kalsın
+*.sh text eol=lf
