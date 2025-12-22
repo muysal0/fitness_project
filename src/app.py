@@ -6,6 +6,26 @@ from sqlalchemy import select
 
 app = Flask(__name__)
 
+@app.after_request
+def add_security_headers(response):
+    """
+    OWASP ZAP Taraması için Güvenlik İyileştirmesi:
+    Eksik olan güvenlik başlıklarını (Headers) tüm yanıtlara ekler.
+    """
+    # 1. Tarayıcının MIME-type tahmin etmesini engeller (Stil dosyası yerine virüs çalışmasın diye)
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    
+    # 2. Sitenin başka bir site içinde (iFrame) çalışmasını engeller (Clickjacking koruması)
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    
+    # 3. XSS (Cross-Site Scripting) korumasını açar
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    
+    # 4. HTTPS zorlaması (Eğer SSL sertifikası olsaydı) - Şimdilik hazırlık olarak ekliyoruz
+    # response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    
+    return response
+
 # --- VERITABANI AYARI ---
 db_url = os.environ.get('DATABASE_URL', 'sqlite:///fitness.db')
 if db_url.startswith("postgres://"):
