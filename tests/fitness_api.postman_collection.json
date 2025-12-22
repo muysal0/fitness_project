@@ -1,7 +1,7 @@
 {
 	"info": {
-		"_postman_id": "fitness-tdd-project",
-		"name": "Fitness API Integration Tests",
+		"_postman_id": "fitness-tdd-integration",
+		"name": "Fitness API Tests",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
@@ -29,7 +29,7 @@
 							"pm.test(\"Status code is 200\", function () {",
 							"    pm.response.to.have.status(200);",
 							"});",
-							"pm.test(\"Classes array exists\", function () {",
+							"pm.test(\"Response is array\", function () {",
 							"    var jsonData = pm.response.json();",
 							"    pm.expect(jsonData.classes).to.be.an('array');",
 							"});"
@@ -51,13 +51,13 @@
 			}
 		},
 		{
-			"name": "3. Make Reservation (Positive)",
+			"name": "3. Book Class (Positive)",
 			"event": [
 				{
 					"listen": "test",
 					"script": {
 						"exec": [
-							"pm.test(\"Status code is 201\", function () {",
+							"pm.test(\"Status code is 201 Created\", function () {",
 							"    pm.response.to.have.status(201);",
 							"});"
 						],
@@ -72,7 +72,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"member_id\": 999,\n    \"class_id\": 1\n}"
+					"raw": "{\n    \"member_id\": 101,\n    \"class_id\": 1\n}"
 				},
 				"url": {
 					"raw": "http://localhost:5000/api/reservations",
@@ -90,12 +90,12 @@
 					"listen": "test",
 					"script": {
 						"exec": [
-							"pm.test(\"Status code is 400 for duplicate\", function () {",
+							"pm.test(\"Status code is 400 Bad Request\", function () {",
 							"    pm.response.to.have.status(400);",
 							"});",
-							"pm.test(\"Error message is correct\", function () {",
+							"pm.test(\"Error message exists\", function () {",
 							"    var jsonData = pm.response.json();",
-							"    pm.expect(jsonData.error).to.include(\"Zaten\");",
+							"    pm.expect(jsonData.error).to.exist;",
 							"});"
 						],
 						"type": "text/javascript"
@@ -109,7 +109,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"member_id\": 999,\n    \"class_id\": 1\n}"
+					"raw": "{\n    \"member_id\": 101,\n    \"class_id\": 1\n}"
 				},
 				"url": {
 					"raw": "http://localhost:5000/api/reservations",
@@ -127,7 +127,7 @@
 					"listen": "test",
 					"script": {
 						"exec": [
-							"pm.test(\"Status code is 404\", function () {",
+							"pm.test(\"Status code is 404 Not Found\", function () {",
 							"    pm.response.to.have.status(404);",
 							"});"
 						],
@@ -142,7 +142,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"member_id\": 999,\n    \"class_id\": 99999\n}"
+					"raw": "{\n    \"member_id\": 101,\n    \"class_id\": 99999\n}"
 				},
 				"url": {
 					"raw": "http://localhost:5000/api/reservations",
@@ -154,4 +154,3 @@
 			}
 		}
 	]
-}

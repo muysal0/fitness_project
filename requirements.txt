@@ -4,3 +4,5 @@ pytest-cov
 hypothesis
 mutmut
 psycopg2-binary
+flask-sqlalchemy>=3.0.0
+sqlalchemy>=2.0.0
