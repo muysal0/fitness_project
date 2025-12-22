@@ -1,0 +1,37 @@
+From HEAD Mon Sep 17 00:00:00 2001
+From: Hypothesis 6.148.6 <no-reply@hypothesis.works>
+Date: Mon, 22 Dec 2025 01:18:00
+Subject: [PATCH] Hypothesis: add explicit examples
+
+---
+--- ./tests\test_properties.py
++++ ./tests\test_properties.py
+@@ -9,6 +9,11 @@
+     is_student=st.booleans(),
+     occupancy_rate=st.floats(min_value=0.0, max_value=1.0)
+ )
++@example(
++    base_price=223.0,
++    is_student=False,
++    occupancy_rate=1.0,
++).via('discovered failure')
+ def test_price_properties(base_price, is_student, occupancy_rate):
+     """
+     Özellik (Invariant):
+@@ -18,13 +23,13 @@
+     """
+     # Rastgele verilerle hesapla
+     final_price = calculate_final_price(base_price, is_student, occupancy_rate)
+-    
++
+     # 1. Fiyat Pozitif mi?
+     assert final_price > 0
+-    
++
+     # 2. Maksimum Sınır Kontrolü (Surge %20 olduğu için en fazla 1.2 katı olabilir)
+     assert final_price <= base_price * 1.2
+-    
++
+     # 3. Öğrenci Kontrolü
+     if is_student:
+         # Eğer öğrenciyse, fiyat taban fiyattan (zam gelse bile) indirimli olmalı

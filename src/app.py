@@ -47,6 +47,20 @@ def calculate_final_price(base_price, is_student, occupancy_rate):
 
     return round(price, 2)
 
+def calculate_refund(paid_amount, hours_until_class):
+    """
+    İade kuralı:
+    - Derse 24 saatten fazla varsa: %100 İade
+    - Derse 24 saatten az varsa: %50 İade
+    - Ders saati geçtiyse (negatif saat): %0 İade (İade yok)
+    """
+    if hours_until_class < 0:
+        return 0.0
+    elif hours_until_class < 24:
+        return paid_amount * 0.50
+    else:
+        return paid_amount
+
 # --- DB BAŞLATMA ---
 def init_db():
     retries = 5
