@@ -34,7 +34,12 @@ if db_url.startswith("postgres://"):
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-db = SQLAlchemy(app)
+
+
+db = SQLAlchemy(app, engine_options={
+    "pool_pre_ping": True,  # Bağlantı koparsa otomatik tekrar dene (Retry Mechanism)
+    "pool_recycle": 300,    # Bağlantıları 5 dakikada bir yenile
+})
 
 # --- MODELLER ---
 reservations = db.Table('reservations',
@@ -94,7 +99,7 @@ def init_db():
                     c1 = FitnessClass(title="Yoga", capacity=10, base_price=100.0)
                     db.session.add(c1)
                     db.session.commit()
-            print("Veritabani baglantisi basarili!")
+            print(f"Veritabani baglantisi basarili! Kullandığım DB: {app.config['SQLALCHEMY_DATABASE_URI']}")
             break
         except Exception as e:
             print(f"DB Baglanamadi, tekrar deneniyor... Hata: {str(e)}")
@@ -151,6 +156,19 @@ def reset():
     db.create_all()
     init_db()
     return jsonify({"message": "Resetlendi"})
+
+from sqlalchemy.exc import OperationalError
+
+@app.errorhandler(OperationalError)
+def handle_db_error(e):
+    """
+    Veritabanı çöktüğünde devreye girer.
+    Kullanıcıya 500 HTML sayfası yerine düzgün bir JSON döner.
+    """
+    return jsonify({
+        "error": "Service Unavailable", 
+        "message": "Veritabanı bağlantısında geçici bir sorun var. Lütfen biraz sonra tekrar deneyin."
+    }), 503
 
 if __name__ == '__main__':
     init_db()
