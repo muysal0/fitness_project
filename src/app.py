@@ -3,6 +3,7 @@ import time
 from flask import Flask, jsonify, request, render_template
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import select
+from sqlalchemy.exc import OperationalError
 
 app = Flask(__name__)
 
@@ -13,7 +14,14 @@ if db_url and db_url.startswith("postgres://"):
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-db = SQLAlchemy(app)
+db = SQLAlchemy(app, engine_options={"pool_pre_ping": True, "pool_recycle": 300})
+
+@app.errorhandler(OperationalError)
+def handle_db_error(e):
+    return jsonify({
+        "error": "Service Unavailable",
+        "message": "Veritabanı bağlantısında geçici bir sorun var. Lütfen biraz sonra tekrar deneyin."
+    }), 503
 
 reservations = db.Table('reservations',
     db.Column('member_id', db.Integer, db.ForeignKey('member.id'), primary_key=True),

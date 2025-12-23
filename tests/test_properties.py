@@ -8,18 +8,17 @@ from src.app import calculate_final_price, calculate_refund
     occupancy_rate=st.floats(min_value=0.0, max_value=1.0)
 )
 def test_price_properties(base_price, is_student, occupancy_rate):
-    final_price = calculate_final_price(base_price, is_student, occupancy_rate)
+    # DÜZELTME 1: "12:00" eklendi
+    final_price = calculate_final_price(base_price, is_student, occupancy_rate, "12:00")
     
-    # 1. Fiyat Pozitif mi?
     assert final_price > 0
     
-    # 2. Sınır Kontrolü (Yuvarlama hatası toleransı)
     max_possible = round(base_price * 1.20, 2)
     assert final_price <= max_possible
     
-    # 3. Öğrenci Kontrolü
     if is_student:
-        standard_price = calculate_final_price(base_price, False, occupancy_rate)
+        # DÜZELTME 2: "12:00" eklendi
+        standard_price = calculate_final_price(base_price, False, occupancy_rate, "12:00")
         assert final_price <= standard_price
 
 @given(

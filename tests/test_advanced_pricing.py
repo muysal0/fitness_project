@@ -9,5 +9,6 @@ from src.app import calculate_final_price
 ])
 def test_decision_table_pricing(is_student, occupancy_rate, expected_price):
     base_price = 100.0
-    actual_price = calculate_final_price(base_price, is_student, occupancy_rate)
+    # DÜZELTME: Sona "12:00" ekledik (Peak hour zammı olmasın diye)
+    actual_price = calculate_final_price(base_price, is_student, occupancy_rate, "12:00")
     assert actual_price == expected_price

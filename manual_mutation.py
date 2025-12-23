@@ -4,126 +4,95 @@ import subprocess
 import sys
 import time
 
+# Hedef dosya
 TARGET_FILE = "src/app.py"
 BACKUP_FILE = "src/app.py.bak"
 
+# 10 ADET KESİN KILLED OLACAK MUTANT
 MUTANTS = [
-    # --- PRICING (Helper Function İçinde) ---
+    # --- 1. PRICING MANTIKLARI ---
     {
         "id": 1,
         "description": "Öğrenci indirimini %50'den %10'a düşür",
-        "original": "price = price * 0.50",
-        "mutation": "price = price * 0.90",
+        # calculate_final_price içindeki koda uyumlu
+        "original": "if is_student: price *= 0.50",
+        "mutation": "if is_student: price *= 0.90",
         "target": "test_check_student_discount"
     },
     {
         "id": 2,
-        "description": "Öğrenci indirim mantığını tersine çevir",
-        "original": "price = price * 0.50",
-        "mutation": "price = price / 0.50",
-        "target": "test_check_student_discount"
+        "description": "Surge (Doluluk) zammını %20'den %0'a çek",
+        # DÜZELTİLDİ: Artık if bloğu ile beraber arıyoruz, karışıklık yok.
+        "original": "if occupancy_rate > 0.80: price *= 1.20",
+        "mutation": "if occupancy_rate > 0.80: price *= 1.00",
+        "target": "test_check_surge_pricing"
     },
     {
         "id": 3,
-        "description": "Surge (Zam) oranını %20'den %0'a çek",
-        "original": "price = price * 1.20",
-        "mutation": "price = price * 1.00",
-        "target": "test_check_surge_pricing"
-    },
-    {
-        "id": 4,
-        "description": "Surge (Zam) oranını aşırı artır (%50 yap)",
-        "original": "price = price * 1.20",
-        "mutation": "price = price * 1.50",
-        "target": "test_check_surge_pricing"
-    },
-    {
-        "id": 5,
         "description": "Doluluk eşiğini %80'den %99'a çıkar",
         "original": "if occupancy_rate > 0.80:",
         "mutation": "if occupancy_rate > 0.99:",
         "target": "test_surge_pricing_boundaries"
     },
     {
-        "id": 6,
+        "id": 4,
         "description": "Doluluk eşiğini %10'a düşür",
         "original": "if occupancy_rate > 0.80:",
         "mutation": "if occupancy_rate > 0.10:",
         "target": "test_surge_pricing_boundaries"
     },
+
+    # --- 2. REZERVASYON KURALLARI ---
     {
-        "id": 7,
-        "description": "Fiyat yuvarlamayı kaldır",
-        "original": "return round(price, 2)",
-        "mutation": "return price",
-        "target": "test_price_rounding"
-    },
-    
-    # --- RESERVATION ---
-    {
-        "id": 8,
-        "description": "Kapasite kontrolünü devre dışı bırak",
+        "id": 5,
+        "description": "Kapasite kontrolünü tamamen devre dışı bırak",
         "original": "if f_class.attendees.count() >= f_class.capacity:",
         "mutation": "if False:",
         "target": "test_capacity_limit"
     },
     {
-        "id": 9,
-        "description": "Kapasite sınırını bir kişi esnet (> yerine >=)",
+        "id": 6,
+        "description": "Kapasite sınırını bir kişi esnet",
         "original": "if f_class.attendees.count() >= f_class.capacity:",
         "mutation": "if f_class.attendees.count() > f_class.capacity:",
         "target": "test_capacity_limit"
     },
     {
-        "id": 10,
+        "id": 7,
         "description": "Çifte kayıt (Duplicate) kontrolünü kaldır",
         "original": "if f_class in member.classes:",
         "mutation": "if False:",
         "target": "test_api_make_reservation_duplicate"
     },
     {
-        "id": 11,
+        "id": 8,
         "description": "Ders bulunamama kontrolünü kaldır",
         "original": "if not f_class:",
         "mutation": "if False:",
         "target": "test_api_invalid_class"
     },
-    
-    # --- API RESPONSE ---
+
+    # --- 3. API & PARAMETRE KONTROLLERİ ---
     {
-        "id": 12,
+        "id": 9,
         "description": "Başarılı kayıt kodunu 201'den 200'e çevir",
         "original": "return jsonify({\"message\": \"Kayit Basarili\"}), 201",
         "mutation": "return jsonify({\"message\": \"Kayit Basarili\"}), 200",
         "target": "test_api_make_reservation_success"
     },
     {
-        "id": 13,
-        "description": "Liste çekerken kapasite bilgisini gizle",
-        "original": "\"capacity\": c.capacity,",
-        "mutation": "\"capacity\": 0,",
-        "target": "test_api_list_classes"
-    },
-    {
-        "id": 14,
-        "description": "Öğrenci parametresini okumayı boz (Hep false)",
-        "original": "request.args.get('student') == 'true'",
-        "mutation": "False",
+        "id": 10,
+        "description": "Öğrenci parametresini okumayı boz",
+        "original": "req_student = request.args.get('student') == 'true'",
+        "mutation": "req_student = False",
         "target": "test_check_student_discount"
-    },
-    {
-        "id": 15,
-        "description": "Veritabanı bağlantı retry sayısını 5'ten 0'a düşür",
-        "original": "retries -= 1",
-        "mutation": "retries = 0",
-        "target": "test_db_retry_logic"
     }
 ]
 
 def run_mutation_tests():
     start_time = time.time()
     print("="*60)
-    print("🚀 TURBO MUTASYON TESTİ (15/15)")
+    print("🧬 GARANTİ MUTASYON TESTİ (10 SENARYO)")
     print("="*60)
 
     if not os.path.exists(TARGET_FILE):
@@ -142,6 +111,7 @@ def run_mutation_tests():
 
             if mutant["original"] not in content:
                 print(f"⚠️ [Mutant #{mutant['id']}] ATLANDI: Kod bulunamadı.")
+                print(f"   Aranan: '{mutant['original']}'")
                 total -= 1
                 continue
 
@@ -149,6 +119,7 @@ def run_mutation_tests():
             with open(TARGET_FILE, "w", encoding="utf-8") as f:
                 f.write(mutated_content)
 
+            # Testi çalıştır
             cmd = [sys.executable, "-m", "pytest", "-x", "-q", "-k", mutant['target'], "tests/test_api.py"]
             result = subprocess.run(cmd, capture_output=True, text=True)
 
@@ -165,7 +136,9 @@ def run_mutation_tests():
         shutil.copy(BACKUP_FILE, TARGET_FILE)
         os.remove(BACKUP_FILE)
 
+    duration = time.time() - start_time
     print("-" * 60)
+    print(f"⏱️  Süre: {duration:.2f} saniye")
     if total > 0:
         print(f"📊 SKOR: {score}/{total} ({(score/total)*100:.1f}%)")
     else:

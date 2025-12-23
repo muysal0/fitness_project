@@ -3,403 +3,195 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProFitness | Üye Girişi</title>
-    <!-- Bootstrap 5 CSS -->
+    <title>ProFitness</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <style>
-        body { background-color: #f0f2f5; font-family: 'Segoe UI', sans-serif; min-height: 100vh; }
-        
-        /* GİRİŞ EKRANI STİLLERİ */
-        #login-screen {
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-        }
-        .login-card {
-            width: 100%;
-            max-width: 400px;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
-        }
-
-        /* DASHBOARD STİLLERİ */
-        #dashboard-screen { display: none; } /* Başlangıçta gizli */
-        
-        .class-card { border: none; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); transition: 0.3s; }
-        .class-card:hover { transform: translateY(-5px); }
-        .price-tag { font-size: 1.3rem; font-weight: bold; color: #28a745; }
+        body { background-color: #f0f2f5; font-family: sans-serif; }
+        #login-screen { height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); }
+        .login-card { width: 400px; padding: 30px; background: white; border-radius: 15px; }
+        #dashboard-screen, #admin-screen { display: none; padding: 20px; }
+        .card { margin-bottom: 20px; transition: 0.3s; border: none; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .card:hover { transform: translateY(-5px); }
+        .price-tag { font-size: 1.5rem; font-weight: bold; color: #28a745; }
         .time-selector.active { background-color: #0d6efd; color: white; }
     </style>
 </head>
 <body>
-
-    <!-- ================= GİRİŞ EKRANI ================= -->
+    <!-- GİRİŞ -->
     <div id="login-screen">
-        <div class="card login-card p-4 bg-white">
-            <div class="text-center mb-4">
-                <i class="fas fa-dumbbell fa-3x text-primary mb-3"></i>
-                <h3 class="fw-bold text-dark">ProFitness</h3>
-                <p class="text-muted">Hoş Geldiniz, lütfen giriş yapın.</p>
+        <div class="login-card text-center">
+            <h2 class="mb-4"><i class="fas fa-dumbbell text-primary"></i> ProFitness</h2>
+            <input type="text" id="loginId" class="form-control mb-3" placeholder="Üye ID veya 'admin'">
+            <div class="form-check form-switch mb-3 text-start">
+                <input class="form-check-input" type="checkbox" id="loginStudentCheck">
+                <label class="form-check-label" for="loginStudentCheck">Öğrenciyim (%50 İndirim)</label>
             </div>
-
-            <div class="mb-3">
-                <label class="form-label fw-bold small text-muted">ÜYE ID NUMARASI</label>
-                <div class="input-group">
-                    <span class="input-group-text"><i class="fas fa-id-card"></i></span>
-                    <input type="number" id="loginId" class="form-control" placeholder="Örn: 101">
-                </div>
-            </div>
-
-            <div class="mb-4">
-                <div class="card bg-light border-0 p-3">
-                    <div class="form-check form-switch d-flex justify-content-between align-items-center">
-                        <label class="form-check-label fw-bold" for="loginStudentCheck">
-                            🎓 Ben Öğrenciyim
-                        </label>
-                        <input class="form-check-input" type="checkbox" id="loginStudentCheck" style="width: 50px; height: 25px;">
-                    </div>
-                </div>
-            </div>
-
-            <button onclick="login()" class="btn btn-primary w-100 py-2 fw-bold rounded-pill">
-                GİRİŞ YAP <i class="fas fa-arrow-right ms-2"></i>
-            </button>
+            <button onclick="login()" class="btn btn-primary w-100">Giriş Yap</button>
         </div>
     </div>
 
-    <!-- ================= ANA EKRAN (DASHBOARD) ================= -->
+    <!-- ÜYE PANELİ -->
     <div id="dashboard-screen">
-        <!-- Navbar -->
-        <nav class="navbar navbar-dark bg-dark mb-4 shadow">
-            <div class="container">
-                <span class="navbar-brand fw-bold"><i class="fas fa-dumbbell text-warning"></i> ProFitness</span>
-                <div class="d-flex align-items-center text-white">
-                    <div class="me-3 text-end">
-                        <div class="small text-muted">Aktif Üye</div>
-                        <div class="fw-bold" id="user-display-name">ID: ---</div>
-                    </div>
-                    <button onclick="logout()" class="btn btn-outline-danger btn-sm">
-                        <i class="fas fa-sign-out-alt"></i> Çıkış
-                    </button>
-                </div>
-            </div>
-        </nav>
-
         <div class="container">
-            
-            <!-- REZERVASYONLARIM -->
-            <div class="row mb-5">
-                <div class="col-12">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-white py-3">
-                            <h6 class="mb-0 fw-bold text-primary"><i class="fas fa-list-check"></i> Rezervasyonlarım</h6>
-                        </div>
-                        <div class="card-body p-0">
-                            <ul class="list-group list-group-flush" id="my-reservations-list">
-                                <li class="list-group-item text-center py-3 text-muted">Yükleniyor...</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3>Merhaba, Üye <span id="displayId"></span></h3>
+                <button onclick="logout()" class="btn btn-danger btn-sm">Çıkış</button>
             </div>
-
-            <!-- DERS LİSTESİ -->
-            <h4 class="mb-3 fw-bold text-dark"><i class="far fa-calendar-alt"></i> Müsait Dersler</h4>
-            <div class="row" id="classes-container">
-                <!-- JS ile dolacak -->
+            <div class="card p-3">
+                <h5>📅 Rezervasyonlarım</h5>
+                <ul id="my-list" class="list-group list-group-flush"><li class="list-group-item">Yükleniyor...</li></ul>
             </div>
-
+            <h4 class="mt-4">Müsait Dersler</h4>
+            <div id="classes-container" class="row"></div>
         </div>
-        
-        <footer class="text-center py-4 text-muted mt-5 small">
-            &copy; 2025 ProFitness TDD Project
-        </footer>
     </div>
 
-    <!-- SCRIPTS -->
+    <!-- ADMIN PANELİ -->
+    <div id="admin-screen">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="text-danger"><i class="fas fa-user-shield"></i> Yönetici Paneli</h2>
+                <button onclick="logout()" class="btn btn-dark btn-sm">Çıkış</button>
+            </div>
+            <div class="card p-4">
+                <div class="d-flex justify-content-between mb-3">
+                    <h5>📋 Aktif Rezervasyon Listesi</h5>
+                    <button onclick="loadAdminData()" class="btn btn-sm btn-outline-primary"><i class="fas fa-sync"></i> Yenile</button>
+                </div>
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr><th>Üye ID</th><th>Üyelik</th><th>Ders</th><th>Saat</th><th>İşlem</th></tr>
+                    </thead>
+                    <tbody id="admin-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     <script>
-        // Global Kullanıcı Değişkeni
-        let currentUser = {
-            id: null,
-            isStudent: false
-        };
-
+        let currentUser = { id: null, isStudent: false };
         let allGroups = {};
 
-        // === GİRİŞ / ÇIKIŞ İŞLEMLERİ ===
-
-        function login() {
-            const idInput = document.getElementById('loginId').value;
+        async function login() {
+            const inputVal = document.getElementById('loginId').value;
             const studentCheck = document.getElementById('loginStudentCheck').checked;
+            if(!inputVal) return Swal.fire('Hata', 'Giriş yapınız', 'warning');
 
-            if (!idInput) {
-                Swal.fire('Hata', 'Lütfen Üye ID giriniz.', 'warning');
+            // ADMIN
+            if (inputVal.toLowerCase() === 'admin') {
+                const { value: password } = await Swal.fire({ title: 'Yönetici Girişi', input: 'password', inputPlaceholder: 'Şifre', confirmButtonText: 'Giriş', showCancelButton: true });
+                if (password === 'admin') {
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('admin-screen').style.display = 'block';
+                    loadAdminData();
+                } else if (password) Swal.fire('Hata', 'Yanlış Şifre!', 'error');
                 return;
             }
 
-            // Kullanıcıyı ayarla
-            currentUser.id = parseInt(idInput);
-            currentUser.isStudent = studentCheck;
+            // USER CHECK
+            try {
+                const requestedType = studentCheck ? 'student' : 'standard';
+                const res = await fetch('/api/login', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ id: parseInt(inputVal), type: requestedType }) });
+                const data = await res.json();
+                if (data.status === 'warning') await Swal.fire({ icon: 'info', title: 'Bilgilendirme', text: data.message, confirmButtonText: 'Tamam' });
 
-            // UI Güncelle
-            document.getElementById('user-display-name').innerText = `ID: ${currentUser.id} ${currentUser.isStudent ? '(Öğrenci)' : ''}`;
-            
-            // Ekranları değiştir
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('dashboard-screen').style.display = 'block';
-
-            // Verileri Çek
-            fetchClasses();
-            fetchMyReservations();
+                currentUser.id = parseInt(inputVal);
+                currentUser.isStudent = (data.actual_type === 'student');
+                const typeText = currentUser.isStudent ? ' (Öğrenci)' : '';
+                document.getElementById('displayId').innerText = currentUser.id + typeText;
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('dashboard-screen').style.display = 'block';
+                fetchClasses(); fetchMyReservations();
+            } catch (err) { Swal.fire('Hata', 'Sunucu hatası', 'error'); }
         }
 
-        function logout() {
-            currentUser = { id: null, isStudent: false };
-            document.getElementById('loginId').value = '';
-            document.getElementById('loginStudentCheck').checked = false;
-            
-            document.getElementById('dashboard-screen').style.display = 'none';
-            document.getElementById('login-screen').style.display = 'flex';
+        function logout() { location.reload(); }
+
+        // --- ADMIN ---
+        async function loadAdminData() {
+            try {
+                const res = await fetch('/api/admin/all'); const data = await res.json();
+                const tbody = document.getElementById('admin-table-body'); tbody.innerHTML = '';
+                
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Şu an hiç rezervasyon yok.</td></tr>';
+                    return;
+                }
+                
+                data.forEach(row => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><span class="badge bg-secondary" style="font-size: 1em;">${row.member_id}</span></td>
+                            <td>${row.type === 'Öğrenci' ? '<span class="badge bg-info text-dark">Öğrenci</span>' : '<span class="badge bg-light text-dark border">Standart</span>'}</td>
+                            <td><b>${row.class_title}</b></td>
+                            <td>${row.class_time}</td>
+                            <td>
+                                <button onclick="adminCancel(${row.member_id}, ${row.class_id})" class="btn btn-sm btn-danger shadow-sm">
+                                    <i class="fas fa-trash-alt"></i> İptal Et
+                                </button>
+                            </td>
+                        </tr>`;
+                });
+            } catch (e) { console.error(e); }
         }
+        async function adminCancel(mid, cid) { cancelReservation(mid, cid, true); }
 
-        // === VERİ ÇEKME İŞLEMLERİ ===
-
+        // --- USER ---
         async function fetchClasses() {
-            try {
-                // Login olurken seçilen öğrenci durumunu kullanıyoruz
-                const response = await fetch(`/api/classes?student=${currentUser.isStudent}`);
-                const data = await response.json();
-                groupAndRender(data.classes);
-            } catch (error) {
-                console.error("Hata:", error);
-            }
+            try { const res = await fetch(`/api/classes?student=${currentUser.isStudent}&member_id=${currentUser.id}`); const data = await res.json(); groupAndRender(data.classes); } catch (e) { console.error(e); }
         }
-
         async function fetchMyReservations() {
-            if (!currentUser.id) return;
-            try {
-                const response = await fetch(`/api/members/${currentUser.id}/reservations`);
-                const data = await response.json();
-                renderMyReservations(data.reservations);
-            } catch (error) {
-                console.error("Hata:", error);
-            }
+            try { const res = await fetch(`/api/members/${currentUser.id}/reservations`); const data = await res.json(); renderMyList(data.reservations); } catch (e) { console.error(e); }
         }
-
-        // === RENDER (EKRANA BASMA) İŞLEMLERİ ===
-
-        function renderMyReservations(reservations) {
-            const list = document.getElementById('my-reservations-list');
-            list.innerHTML = '';
-
-            if (reservations.length === 0) {
-                list.innerHTML = '<li class="list-group-item text-center text-muted py-3">Henüz aktif bir rezervasyonunuz yok.</li>';
-                return;
-            }
-
-            reservations.forEach(r => {
-                const item = `
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <span class="fw-bold text-dark">${r.title}</span>
-                            <span class="badge bg-light text-dark mx-2"><i class="far fa-clock"></i> ${r.time}</span>
-                            <small class="text-muted">${r.instructor}</small>
-                        </div>
-                        <button onclick="cancelReservation(${r.class_id})" class="btn btn-outline-danger btn-sm rounded-pill px-3">
-                            <i class="fas fa-times me-1"></i> İptal
-                        </button>
-                    </li>
-                `;
-                list.innerHTML += item;
+        function renderMyList(list) {
+            const ul = document.getElementById('my-list'); ul.innerHTML = '';
+            if(list.length === 0) ul.innerHTML = '<li class="list-group-item text-muted">Rezervasyon yok.</li>';
+            list.forEach(c => {
+                ul.innerHTML += `<li class="list-group-item d-flex justify-content-between"><span><b>${c.title}</b> (${c.time})</span> <button onclick="cancelReservation(${currentUser.id}, ${c.class_id})" class="btn btn-sm btn-outline-danger">İptal</button></li>`;
             });
         }
-
         function groupAndRender(classes) {
-            allGroups = {};
-            classes.forEach(c => {
-                if (!allGroups[c.title]) allGroups[c.title] = [];
-                allGroups[c.title].push(c);
-            });
-
-            const container = document.getElementById('classes-container');
-            container.innerHTML = '';
-
+            allGroups = {}; classes.forEach(c => { if (!allGroups[c.title]) allGroups[c.title] = []; allGroups[c.title].push(c); });
+            const div = document.getElementById('classes-container'); div.innerHTML = '';
             for (const [title, sessions] of Object.entries(allGroups)) {
-                const firstSession = sessions[0];
-                
-                let timeButtonsHtml = '';
-                sessions.forEach((s, index) => {
-                    let btnClass = 'btn-outline-primary';
-                    if (s.occupancy >= s.capacity) btnClass = 'btn-outline-secondary disabled';
-                    const activeClass = index === 0 ? 'active' : '';
-                    
-                    timeButtonsHtml += `
-                        <button type="button" 
-                                class="btn ${btnClass} ${activeClass} btn-sm me-2 mb-2 time-selector" 
-                                onclick="selectTime('${title}', ${s.id}, this)">
-                            <i class="far fa-clock"></i> ${s.time}
-                        </button>
-                    `;
+                sessions.sort((a,b) => a.time.localeCompare(b.time));
+                const instructor = sessions[0].instructor;
+                let btns = ''; const first = sessions[0];
+                sessions.forEach((s, i) => {
+                    let cls = s.occupancy >= s.capacity ? 'btn-outline-secondary disabled' : 'btn-outline-primary';
+                    let active = i === 0 ? 'active' : '';
+                    btns += `<button class="btn ${cls} ${active} btn-sm me-2 mb-2 ts" onclick="select(this, ${s.id})">${s.time}</button>`;
                 });
-
-                const cardHtml = `
-                    <div class="col-md-6 mb-4">
-                        <div class="card class-card h-100">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h5 class="card-title fw-bold mb-0">${title}</h5>
-                                    <span class="badge bg-dark">${firstSession.instructor}</span>
-                                </div>
-                                <p class="text-muted small">Seans Seçiniz:</p>
-                                <div class="d-flex flex-wrap mb-3" id="buttons-${title.replace(/\s/g, '')}">
-                                    ${timeButtonsHtml}
-                                </div>
-                                <div id="info-area-${firstSession.id}" class="dynamic-info p-3 bg-light rounded">
-                                    ${generateInfoHtml(firstSession)}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                container.innerHTML += cardHtml;
+                div.innerHTML += `<div class="col-md-6 mb-4"><div class="card h-100"><div class="card-body"><div class="d-flex justify-content-between align-items-center mb-2"><h5 class="card-title fw-bold mb-0">${title}</h5><span class="badge bg-light text-dark">${instructor}</span></div><p class="text-muted small">Seans Seçiniz:</p><div id="btns-${first.id}">${btns}</div><div id="info-${first.id}" class="info-box p-3 bg-light rounded mt-3">${renderInfo(first)}</div></div></div></div>`;
             }
         }
-
-        function selectTime(groupTitle, selectedId, btnElement) {
-            const groupKey = groupTitle.replace(/\s/g, '');
-            const container = document.getElementById(`buttons-${groupKey}`);
-            const buttons = container.getElementsByClassName('time-selector');
-            for (let btn of buttons) btn.classList.remove('active');
-            btnElement.classList.add('active');
-
-            const session = allGroups[groupTitle].find(s => s.id === selectedId);
-            const cardBody = btnElement.closest('.card-body');
-            const infoArea = cardBody.querySelector('.dynamic-info');
-            infoArea.innerHTML = generateInfoHtml(session);
+        function select(btn, cid) {
+            const parent = btn.parentElement;
+            for(let b of parent.getElementsByClassName('ts')) b.classList.remove('active');
+            btn.classList.add('active');
+            let session = null;
+            for(const group of Object.values(allGroups)) { const found = group.find(s => s.id === cid); if(found) { session = found; break; } }
+            parent.nextElementSibling.innerHTML = renderInfo(session);
         }
-
-        function generateInfoHtml(c) {
-            const occupancyRate = (c.occupancy / c.capacity) * 100;
-            let barColor = 'bg-success';
-            let alertBadge = '';
-            let btnState = '';
-            let btnText = 'Rezervasyon Yap';
-
-            if (occupancyRate >= 80) {
-                barColor = 'bg-warning';
-                alertBadge = '<div class="mt-1"><span class="badge bg-danger">⚡ Yoğunluk Zammı (+%20)</span></div>';
-            }
-            if (occupancyRate >= 100) {
-                barColor = 'bg-danger';
-                btnState = 'disabled';
-                btnText = 'Kontenjan Dolu';
-                alertBadge = '<div class="mt-1"><span class="badge bg-dark">Tükendi</span></div>';
-            }
-
-            let priceDisplay = `<div class="price-tag">${c.final_price} TL</div>`;
-            if (c.final_price !== c.base_price) {
-                priceDisplay = `
-                    <div class="text-muted text-decoration-line-through small">Taban: ${c.base_price} TL</div>
-                    <div class="price-tag">${c.final_price} TL</div>
-                `;
-            }
-
-            return `
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                    <span class="fw-bold text-secondary small">Doluluk</span>
-                    <span class="small">${c.occupancy}/${c.capacity}</span>
-                </div>
-                <div class="progress mb-3" style="height: 6px;">
-                    <div class="progress-bar ${barColor}" style="width: ${occupancyRate}%"></div>
-                </div>
-                <div class="text-center mb-3">
-                    ${priceDisplay}
-                    ${alertBadge}
-                </div>
-                <button onclick="bookClass(${c.id})" class="btn btn-primary w-100 fw-bold" ${btnState}>
-                    ${btnText}
-                </button>
-            `;
+        function renderInfo(c) {
+            const pct = (c.occupancy / c.capacity) * 100;
+            let bar = pct >= 80 ? 'bg-warning' : 'bg-success';
+            let btnTxt = 'Rezervasyon Yap'; let dis = '';
+            if(pct >= 100) { bar = 'bg-danger'; btnTxt = 'DOLU'; dis = 'disabled'; }
+            return `<div class="d-flex justify-content-between small mb-1"><span>Doluluk</span><span>${c.occupancy}/${c.capacity}</span></div><div class="progress mb-3" style="height: 6px;"><div class="progress-bar ${bar}" style="width: ${pct}%"></div></div><div class="text-center mb-3"><div class="price-tag">${c.final_price} TL</div></div><button onclick="book(${c.id})" class="btn btn-primary w-100 fw-bold" ${dis}>${btnTxt}</button>`;
         }
-
-        // === REZERVASYON İŞLEMLERİ ===
-
-        async function bookClass(classId) {
-            // Giriş yapmış kullanıcının bilgilerini kullanıyoruz
-            const payload = {
-                member_id: currentUser.id,
-                class_id: classId,
-                membership_type: currentUser.isStudent ? 'student' : 'standard'
-            };
-
-            try {
-                const response = await fetch('/api/reservations', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                
-                const result = await response.json();
-
-                if (response.ok) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Başarılı!',
-                        text: result.message,
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-                    // Listeleri Güncelle
-                    fetchClasses(); // Ders doluluğunu güncelle
-                    fetchMyReservations(); // Listeme ekle
-                } else {
-                    Swal.fire('Hata', result.error, 'error');
-                }
-            } catch (err) {
-                Swal.fire('Hata', 'Sunucu hatası', 'error');
-            }
+        async function book(cid) {
+            const payload = { member_id: currentUser.id, class_id: cid, membership_type: currentUser.isStudent ? 'student' : 'standard' };
+            try { const res = await fetch('/api/reservations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); const d = await res.json(); if (res.ok) { Swal.fire('Süper', d.message, 'success'); fetchClasses(); fetchMyReservations(); } else Swal.fire('Hata', d.error, 'error'); } catch (e) { Swal.fire('Hata', 'Sunucu hatası', 'error'); }
         }
-
-        async function cancelReservation(classId) {
-            const confirmResult = await Swal.fire({
-                title: 'Emin misiniz?',
-                text: "Rezervasyon iptal edilecek.",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                confirmButtonText: 'İptal Et'
-            });
-
-            if (!confirmResult.isConfirmed) return;
-
-            try {
-                const response = await fetch('/api/reservations', {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ member_id: currentUser.id, class_id: classId })
-                });
-                
-                const result = await response.json();
-
-                if (response.ok) {
-                    Swal.fire('İptal Edildi', result.message, 'success');
-                    fetchClasses();
-                    fetchMyReservations();
-                } else {
-                    Swal.fire('Hata', result.error, 'error');
-                }
-            } catch (err) {
-                Swal.fire('Hata', 'İptal başarısız', 'error');
-            }
+        async function cancelReservation(mid, cid, isAdmin = false) {
+            const c = await Swal.fire({ title: 'İptal?', icon: 'warning', showCancelButton: true, confirmButtonText:'Evet' });
+            if(!c.isConfirmed) return;
+            const res = await fetch('/api/reservations', { method: 'DELETE', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ member_id: mid, class_id: cid }) });
+            if(res.ok) { Swal.fire('Silindi', '', 'success'); if (isAdmin) loadAdminData(); else { fetchClasses(); fetchMyReservations(); } } else { Swal.fire('Hata', 'Silinemedi', 'error'); }
         }
     </script>
 </body>

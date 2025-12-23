@@ -1,7 +1,7 @@
-version: '3.8'
 services:
   db:
     image: postgres:15-alpine
+    restart: always
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
@@ -16,10 +16,14 @@ services:
 
   web:
     build: .
+    restart: always
     ports:
       - "5000:5000"
     environment:
+      # Veritabanına bağlantı cümlesi
       DATABASE_URL: postgresql://user:password@db:5432/fitness_db
+      # Flask'a template klasörünü göster
+      FLASK_APP: src/app.py
     depends_on:
       db:
         condition: service_healthy

@@ -1,6 +1,7 @@
 import pytest
 from src.app import calculate_final_price
 
+# PAIRWISE (İKİLİ) TEST SENARYOLARI
 @pytest.mark.parametrize("membership, class_type, occupancy, time, expected_price", [
     ("standard", "yoga", 0.5, "morning", 100.0),
     ("standard", "spinning", 0.9, "evening", 180.0),
@@ -10,7 +11,14 @@ from src.app import calculate_final_price
     ("premium", "spinning", 0.5, "evening", 150.0),
 ])
 def test_pairwise_combinations(membership, class_type, occupancy, time, expected_price):
+    # Arrange
     base_price = 100.0 if class_type == "yoga" else 150.0
     is_student = (membership == "student")
-    actual_price = calculate_final_price(base_price, is_student, occupancy)
+    
+    # DÜZELTME BURADA:
+    # Fonksiyon artık saat istiyor. Test tablosundaki fiyatlar zamsız saate göre hesaplandığı için
+    # buraya nötr bir saat ("12:00") gönderiyoruz.
+    actual_price = calculate_final_price(base_price, is_student, occupancy, "12:00")
+
+    # Assert
     assert actual_price == expected_price
